@@ -1,36 +1,79 @@
 main :: IO ()
 main = do
     reports <- readInput
-    print $ length reports
-    let result = foldl (\ac r -> if checkerRec r Unset then ac+1 else ac)
+    let result = foldl (\ac r -> if pt2 r True then ac+1 else ac)
                         0 reports
     print result
 
-data LevelDir = Asc | Des | Unset
-    deriving (Eq, Show)
-
-checkerRec :: [Int] -> LevelDir -> Bool
-checkerRec [_] _ = True
-checkerRec [] _ = True
-checkerRec (lv1 : lv2 : lvls) dir
-    | lv1 == lv2                = False
-    | abs (lv1 - lv2) > 3       = False 
-    | lv1 > lv2 && dir == Asc   = False
-    | lv1 < lv2 && dir == Des   = False
-    | lv1 > lv2                 = checkerRec (lv2:lvls) Des
-    | lv1 < lv2                 = checkerRec (lv2:lvls) Asc
-    -- | otherwise                 = checkerRec (lv2:lvls) dir
+    -- let result = pt2 [1,2,3,4] True
+    -- print result
+    -- print $ pt2 [1,4,2] True
+    -- print $ pt2 [1,4,2,4] True
+    -- print $ pt2 [9,4,2,4] True
+    -- print $ pt2 [9,4,4] True
+    -- print $ pt2 [9,4,3] True
+    -- print $ pt2 [20,15,18,12,15] True
 
 
+-- 0,1,2
+-- 0,1,3
+-- 0,2,3
+-- 1,2,3
+-- three nums and then 'rest'
 
-readInput2 :: IO [[Int]]
-readInput2 = do
-    return [
-        [1,2,3,4]
-        ,[1,2,4,5]
-        ,[2,4,5]
-        ,[5,4,2]
-        ]
+
+pt2 :: [Int] -> Bool -> Bool
+pt2 [] _ = True -- erf
+pt2 [x] _ = True -- erf
+pt2 [x,y] canSkip = if canSkip then True else (abs (x - y)) <= 3
+pt2 [x,y,z] canSkip
+    | canSkip == False = checkThree [x,y,z]
+    | abs (x - z) <= 3  = True
+pt2 [x,y,z,zz] canSkip =
+    if canSkip == False then
+        checkThree [x,y,z]
+    else
+        pt2 [y,z,zz] False
+        || pt2 [x,y,z] False
+        || pt2 [y,z,zz] False
+
+pt2 (x:y:z,zz xs) canSkip
+    | canSkip == False      = checkThree
+
+    let x3check = checkThree [x,y,head xs]
+    if x3check then True
+    else
+        pt2 [y,z] False
+    let xyDiff = x - y
+    let yzDiff = y - z
+    let validDiffs = abs xyDiff <= 3 && abs yzDiff <= 3 && xyDiff * yzDiff > 0
+    
+
+pt2 (x:y:z:xs) canSkip =
+    let xyDiff = x - y
+    let yzDiff = y - z
+    let combinedValid = xyDiff * yzDiff > 0
+
+pt2 (x:y:xs) canSkip =
+    let validDiff = abs (x - y) <= 3 && x /= y
+    in case (validDiff, canSkip) of
+        (False, False) -> False
+        (True, _) -> pt2 (y:xs) canSkip
+        (False, True) -> pt2 (x:xs) False || pt2 (y:xs) False
+
+-- erf
+
+checkThree :: [Int] -> Bool
+checkThree [x,y,z] =
+    let xyDiff = x - y
+    let yzDiff = y - z
+    in abs xyDiff <= 3 && abs yzDiff <= 3 && xyDiff * yzDiff > 0
+    
+
+-- readInput2 :: IO [[Int]]
+-- readInput2 = do
+--     return [[1,2,3,4]
+--         ]
 
 readInput :: IO [[Int]]
 readInput = do
