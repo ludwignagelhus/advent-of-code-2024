@@ -1,27 +1,40 @@
--- module Main (main) where
-
 import Text.Regex.TDFA
 import Text.Read (readMaybe)
 
 main :: IO ()
 main = do
-    let input = "Here are some numbers: 12, 123, 1234, 5"
-        pattern = "\\b[0-9]{1,3}\\b"  -- Match 1 to 3 digits
-        matches = getAllTextMatches (input =~ pattern)
-        -- intMatches = [read m | m <- matches]
-        -- intMatches = [m | Just m <- map readMaybe matches]
-        intMatches = map read matches :: [Int]
+    input <- readInput "input.txt"
+    let mulStrings = getMulStringsPt2 input
+    print $ smartExec mulStrings True
 
-    print intMatches
+readInput :: String -> IO String
+readInput filename = do
+    input <- readFile filename
+    return  (head $ lines input)
 
+getMulStrings :: String -> [String]
+getMulStrings s =
+    let pattern = "mul\\(\\b[0-9]{1,3}\\b,\\b[0-9]{1,3}\\b\\)"
+    in getAllTextMatches (s =~ pattern)
 
--- mulString :: String -> Int
--- mulString s =
---     let n1 = read (s =~ "[0-9]3+" :: String)
---     let n2 = read (s =~ "[0-9]3+" :: String)
---     in n1 * n2
+mulStr :: String -> Int
+mulStr s =
+    let pattern = "\\b[0-9]{1,3}\\b"
+        matches = getAllTextMatches (s =~ pattern)
+        (fst:snd:_) = map read matches :: [Int]
+    in fst * snd
 
--- readInput :: String -> IO String
--- readInput filename = do
---     input <- readFile filename
---     return  (head $ lines input)
+getMulStringsPt2 :: String -> [String]
+getMulStringsPt2 s =
+    let pattern = "mul\\(\\b[0-9]{1,3}\\b,\\b[0-9]{1,3}\\b\\)|don't\\(\\)|do\\(\\)"
+        matches = getAllTextMatches (s =~ pattern)
+    in matches
+
+-- smartExec :: [String] -> Bool -> Int
+-- smartExec [] _ = 0
+smartExec [x] exec = if exec then mulStr x else 0
+smartExec (x:xs) exec
+    | x == "do()"                       = smartExec xs True
+    | x == "don't()" || exec == False   = smartExec xs False
+    | exec == True                      = mulStr x + smartExec xs True
+    
