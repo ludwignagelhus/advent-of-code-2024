@@ -1,4 +1,4 @@
-module TestModule where
+module Util where
 
 -- Could actually use typeclass here??
 type Coord = (Int, Int)
