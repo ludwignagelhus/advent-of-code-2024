@@ -21,10 +21,6 @@ main = do
     -- print $ pt2 puzzle
     pt2
 
-readInput :: String -> IO Puzzle
-readInput fileName = 
-    lines <$> readFile fileName
-
 type Puzzle = [String]
 type PuzzleChar = (Coord, Char)
 
@@ -37,12 +33,6 @@ countXmas puzzle orig =
     in
        length $ filter isXmas [east, southEast, south, southWest]
         
-getPChar :: Puzzle -> Coord -> Maybe Char
-getPChar puzzle (x,y) =
-    if x < 0 || y < 0 || length puzzle <= y 
-        || length (puzzle !! y) <= x then Nothing
-    else Just (puzzle !! y !! x)
-
 isXmas :: [Char] -> Bool
 isXmas word = word == "XMAS" || reverse word == "XMAS"
 
@@ -51,16 +41,15 @@ isXmas word = word == "XMAS" || reverse word == "XMAS"
 pt2 :: IO ()
 pt2 = do
     puzzle <- readInput "input.txt"
-    -- mapM_ print puzzle
-    -- print $ getXCoords puzzle (2,1)
-    -- print $ isMASAM puzzle (2,1)
-
     let nRows = length puzzle
     let nCols = length (head puzzle)
     let pixels = [(x,y) | x <- [0..nCols-1], y <- [0..nRows-1]]
     let total = foldl (\acc p -> if isMASAM puzzle p then acc + 1 else acc) 0 pixels
     print total
 
+readInput :: String -> IO Puzzle
+readInput fileName = 
+    lines <$> readFile fileName
 
 isMASAM :: Puzzle -> Coord -> Bool
 isMASAM puzzle (x,y)
@@ -69,8 +58,7 @@ isMASAM puzzle (x,y)
    && [sw, orig, ne] |> masOrSam    = True
     | otherwise                     = False
     where
-        coords = getXCoords puzzle (x,y)
-        pChars = mapMaybe (getPChar puzzle) coords
+        pChars = getXCoords puzzle (x,y) |> mapMaybe (getPChar puzzle) 
         [nw, ne, orig, sw, se] = pChars
 
 getXCoords :: Puzzle -> Coord -> [Coord]
@@ -79,8 +67,11 @@ getXCoords puzzle orig =
      orig,
      addCoords orig (-1,1), addCoords orig (1,1)]
 
-validPCoord :: Puzzle -> Coord -> Bool
-validPCoord puzzle (x,y) = x >= 0 && y >= 0 && length puzzle > y && length (puzzle !! y) > x
+getPChar :: Puzzle -> Coord -> Maybe Char
+getPChar puzzle (x,y) =
+    if x < 0 || y < 0 || length puzzle <= y 
+        || length (puzzle !! y) <= x then Nothing
+    else Just (puzzle !! y !! x)
 
 masOrSam :: [Char] -> Bool
 masOrSam word = word == "MAS" || word == "SAM"
