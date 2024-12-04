@@ -1,8 +1,15 @@
+module Main where
+
+import Lib (someFunc)
 import Text.Regex.TDFA
 import Text.Read (readMaybe)
 
+hw :: IO ()
+hw = putStrLn "Hello, World!"
+
 main :: IO ()
 main = do
+    someFunc
     input <- readInput "input.txt"
     let mulStrings = getMulStringsPt2 input
     print $ smartExec mulStrings True
