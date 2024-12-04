@@ -1,6 +1,9 @@
 module Main where
 
+import Data.List (permutations)
 import Text.Read (readMaybe)
+import Data.Maybe (mapMaybe)
+
 import Util
 
 main :: IO ()
@@ -8,46 +11,36 @@ main = do
     putStrLn "day 4"
     puzzle <- readInput
 
-    print $ findXmas (5,0) puzzle
+    let nRows = length puzzle
+    let nCols = length (head puzzle)
+    let coords = [(x,y) | x <- [0..nCols-1], y <- [0..nRows-1]]
 
-    print $ "foo" ++ ""
+    let total = foldl (\acc coord -> acc + countXmas puzzle coord) 0 coords
 
-    return ()
-
+    print total
 
 readInput :: IO Puzzle
-readInput = do
+readInput = 
     lines <$> readFile "input-example.txt"
 
 type Puzzle = [String]
 type PuzzleChar = (Coord, Char)
 
--- data PuzzleChar = PuzzleChar Coord Char deriving (Show, Eq)
-
--- -- maybe only need to check right, down, down-riqght, down-left
--- getCharSeqs :: Coord -> [String] -> [[Char]]
--- getCharSeqs orig puzzle =
---     -- let orig = Just (puzzle !! y !! x)
---     let east = map puzzleChar . addCoords orig [(1,0), (2,0), (3,0)]
---     let southEast = map puzzleChar [orig, (), (), ()] lines !! (y + 1) !! (x + 1)
---     let south = []
---     let southWest = []
-
-    -- erf 
-
--- findXmas :: Coord -> Puzzle -> [Char]
-findXmas orig puzzle =
-    let east = map (getPChar puzzle . addCoords orig) [(0,0), (1,0), (2,0), (3,0)]
-        southEast = filter Just $ map (getPChar puzzle . addCoords orig) [(0,0), (1,1), (2,2), (3,3)]
-        south = filter Just $ map (getPChar puzzle . addCoords orig) [(0,0), (0,1), (0,2), (0,3)]
-        southWest = filter Just $ map (getPChar puzzle . addCoords orig) [(0,0), (-1,1), (-2,2), (-3,3)]
+countXmas :: Puzzle -> Coord -> Int
+countXmas puzzle orig =
+    let east = mapMaybe (getPChar puzzle . addCoords orig) [(0,0), (1,0), (2,0), (3,0)]
+        southEast = mapMaybe (getPChar puzzle . addCoords orig) [(0,0), (1,1), (2,2), (3,3)]
+        south = mapMaybe (getPChar puzzle . addCoords orig) [(0,0), (0,1), (0,2), (0,3)]
+        southWest = mapMaybe (getPChar puzzle . addCoords orig) [(0,0), (-1,1), (-2,2), (-3,3)]
     in
-        east
+       length $ filter isXmas [east, southEast, south, southWest]
         
+-- would be cool to test some maybe stuff here...
 
 getPChar :: Puzzle -> Coord -> Maybe Char
 getPChar puzzle (x,y) =
-    if length puzzle <= y|| length (puzzle !! y) <= x then Nothing
+    if x < 0 || y < 0 || length puzzle <= y 
+        || length (puzzle !! y) <= x then Nothing
     else Just (puzzle !! y !! x)
 
 puzzleChar :: Puzzle -> Coord -> Maybe PuzzleChar
@@ -56,6 +49,6 @@ puzzleChar puzzle (x,y) =
     else Just ((x,y), puzzle !! y !! x)
 
 isXmas :: [Char] -> Bool
-isXmas word = word == "xmas" || reverse word == "xmas"
+isXmas word = word == "XMAS" || reverse word == "XMAS"
 
         
