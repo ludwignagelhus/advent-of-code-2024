@@ -1,51 +1,36 @@
-import Data.Maybe (mapMaybe, catMaybes)
-
-main :: IO ()
-main = pt1 >> pt2
-
 type Puzzle = [[Char]]
 type Coord = (Int, Int)
 
-pt1 :: IO ()
-pt1 = do
-    puzzle <- lines <$> readFile "input.txt"
-    let nRows   = length puzzle; nCols = length (head puzzle)
-        coords  = [(x,y) | x <- [0..nCols-1], y <- [0..nRows-1]]
-        total   = sum . map (countXmas puzzle) $ coords
-    print total
+main :: IO ()
+main = do
+    puzzle@(row:_) <- lines <$> readFile "input.txt"
+    let coords  = [(x,y) | x <- [0..length row -1], y <- [0..length puzzle-1]]
+        totalPt1   = sum . map (countXmas puzzle) $ coords
+        totalPt2   = length . filter (isMasam puzzle) $ coords
+    putStrLn $ "pt1: " ++ show totalPt1 ++ "\npt2: " ++ show totalPt2
 
 countXmas :: Puzzle -> Coord -> Int
-countXmas puzzle (px,py) =
-    let localGetPChars = mapMaybe (getPChar puzzle . \(x,y) -> (px+x, py+y))
-        east        = localGetPChars [(0,0),  (1,0),  (2,0),  (3,0)]
-        southEast   = localGetPChars [(0,0),  (1,1),  (2,2),  (3,3)]
-        south       = localGetPChars [(0,0),  (0,1),  (0,2),  (0,3)]
-        southWest   = localGetPChars [(0,0), (-1,1), (-2,2), (-3,3)]
+countXmas p (px,py) =
+    let localPch = map (pCh p . \(x,y) -> (x + px, y + py))
+        e        = localPch [(0,0),  (1,0),  (2,0), (3,0)]
+        se       = localPch [(0,0),  (1,1),  (2,2),  (3,3)]
+        s        = localPch [(0,0),  (0,1),  (0,2),  (0,3)]
+        sw       = localPch [(0,0), (-1,1), (-2,2), (-3,3)]
     in
-       length . filter (`elem` ["XMAS", "SAMX"]) $ [east, southEast, south, southWest] 
+       length $ filter (`elem` ["XMAS", "SAMX"]) [e, se, s, sw] 
 
-getPChar :: Puzzle -> Coord -> Maybe Char
-getPChar puzzle (x,y) =
-    if x < 0 || y < 0 || y >= length puzzle || x >= length (puzzle !! y)
-        then Nothing
-    else Just (puzzle !! y !! x)
+pCh :: Puzzle -> Coord -> Char
+pCh p@(r:_) (x,y)
+    | elem y [0..length p-1] && elem x [0..length r-1] = p !! y !! x
+    | otherwise = ' '
 
-pt2 :: IO ()
-pt2 = do
-    puzzle <- lines <$> readFile "input.txt"
-    let nRows   = length puzzle; nCols = length (head puzzle)
-        coords  = [(x,y) | x <- [0..nCols-1], y <- [0..nRows-1]]
-        total   = length . filter (isMASAM puzzle) $ coords
-    print total
-
-isMASAM :: Puzzle -> Coord -> Bool
-isMASAM puzzle p
-    | length chars /= 5                                     = False
+isMasam :: Puzzle -> Coord -> Bool
+isMasam p@(r:_) pCoord
+    | length xchars /= 5                                    = False
     | all (`elem` ["MAS", "SAM"]) [[nw,o,se],[sw,o,ne]]     = True
     | otherwise                                             = False
     where
-        chars = mapMaybe (getPChar puzzle) $ getXCoords puzzle p
-        [nw, ne, o, sw, se] = chars
+        xchars@[nw, ne, o, sw, se] = map (pCh p) (xCoords pCoord)
 
-getXCoords :: Puzzle -> Coord -> [Coord]
-getXCoords puzzle (x,y) = [(x-1, y-1), (x+1,y-1), (x,y), (x-1,y+1), (x+1,y+1)]
+xCoords :: Coord -> [Coord]
+xCoords (x,y) = [(x-1, y-1), (x+1,y-1), (x,y), (x-1,y+1), (x+1,y+1)]
