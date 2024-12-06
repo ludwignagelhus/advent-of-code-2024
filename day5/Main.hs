@@ -1,4 +1,8 @@
+module Main where
 import Data.List.Split
+import Data.List (groupBy)
+import Data.Map (Map, fromListWith)
+import Control.Arrow ((>>>))
 
 main :: IO ()
 main = do
@@ -6,58 +10,44 @@ main = do
 
 type Page = Int
 type PageOrder = [Int]
+type Updates = [Page]
 type Rule = (Page, Page)
-type RuleMap = [(Page, [Page])]
+type RuleMap = Map Page [Page]
+
+-- read about operator... specificity?
+(|>) :: a -> (a -> b) -> b
+x |> f = f x
 
 example :: IO ()
 example = do
     content <- readFile "input-test.txt"
-    let res = parseFileInput content
-    -- print res
-    res2 <- lines <$> readFile "input-test.txt"
-    print res2
-    print $ splitWhen (all (`elem` " \t\n")) res2
-    -- let [ruleLines,updateLines] = splitWhen (== " ") inputLines
-    -- print res
-    -- in case res of
-    -- mapM_ print ruleLines
-   
-    return ()
+    let intLists         = content |> (replace ['|', ','] ' ') |> lines |> map lineToInts
+        rules            = intLists |> takeWhile (not . null) |> map (\[a,b] -> (a, b))
+        updates          = intLists |> (drop 1 . dropWhile (not . null))
 
-foo :: IO ()
-foo = do
-    print "foobar"
-    return ()
+    mapM_ print rules
+    mapM_ print updates
 
-parseFileInput :: String -> (RuleMap, [PageOrder])
-parseFileInput str
-    | length res < 2        = error "Unexpected input"
-    | otherwise             = ([], [])
-    where
-        xsLines = lines str
-        res = splitWhen (=="\n") xsLines
+    -- let ruleMap = mkRuleMap rules
+    -- print ruleMap
 
+    -- case res of
+    --     [rules, updates] -> print rules
+    --     _ -> error "Unexpected input"
 
--- getFileInput :: String -> IO (RuleMap, PageOrder)
--- getFileInput filename
---     | any length    [ruleLines, updateLines]    = ([],[])
---     | otherwise = ([], [])
---     where
---         content <- lines <$> readFile filename
---         res@[ruleLines,updateLines] = map (map readInts) $ splitWhen (==" ") content
---         -- res =  $ splitWhen (==" ") content
---         print res
---         return ([], [])
+lineToInts :: String -> [Int]
+lineToInts = map (read :: String -> Int) . words
 
-readInts :: String -> [Int]
-readInts = map read . words
--- mkRules :: [String] -> RuleMap
--- mkRules = map ((\[a,b] -> (read a, map read b)) . words)
+replace :: Eq a => [a] -> a -> [a] -> [a]
+replace targets with = map (\x -> if x `elem` targets then with else x)
 
+mkRuleMap :: [Rule] -> RuleMap
+mkRuleMap = fromListWith (++) . map (\(a,b) -> (a, [b]))
 
 -- just need to mk the rule map...
-validPageOrder :: RuleMap -> [Page] -> Bool
-validPageOrder rules pages = False
+validUpdates :: RuleMap -> Updates -> Bool
+validUpdates _ [] = True
+validUpdates rules (x:xs) = False
 -- validPageOrder rules pages
 
 -- passesRule :: -> Rule -> [Page] -> Bool
@@ -73,9 +63,9 @@ dropLast :: [a] -> [a]
 dropLast [x] = []
 dropLast (x:xs) = x : dropLast xs
 
-getRules :: RuleMap -> Page -> [Page]
-getRules rm p =
-    let rules = lookup p rm
-    in case rules of
-        Just ps -> ps
-        Nothing -> []
+-- getRules :: RuleMap -> Page -> [Page]
+-- getRules rm p =
+--     let rules = lookup p rm
+--     in case rules of
+--         Just ps -> ps
+--         Nothing -> []

@@ -21,3 +21,8 @@ ghci> foobar
 - hls
 - cabal
 - stack
+
+# hidden packages:
+
+some packages are hidden by default in the ghci repl.
+Ie. they are installed, but not visible; not available to be imported.
