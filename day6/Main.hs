@@ -44,7 +44,7 @@ patrol :: Area -> Path -> Direction -> Path
 patrol area path dir
     | null path                     = error "No starting point."
     | not (visible area nextPos)    = path
-    | nextsqCh == '#'             = patrol area path (turnRight dir) 
+    | nextsqCh == '#'               = patrol area path (turnRight dir) 
     | otherwise                     = patrol area (nextPos : path) dir
     where
         nextPos = moveOne (head path) dir
@@ -87,44 +87,38 @@ pt2 = do
 
 expfn :: IO ()
 expfn = do
-    -- area <- parseInput <$> readFile "input-test.txt"
-    area <- parseInput <$> readFile "input.txt"
+    area <- parseInput <$> readFile "input-test.txt"
+    -- area <- parseInput <$> readFile "input.txt"
     let guard@(origin,dir) = fromMaybe (error "No guard found.") (findGuard area)
     
     -- let areaWithLoop = addObstacle area (7,9)
-    -- let areaWithLoop = addObstacle area (3,6)
-    -- printArea areaWithLoop
-    -- let res2 = isLooping areaWithLoop guard (Set.fromList [guard])
-    -- print res2
 
-    print guard
-    let res3 = findLoops area guard (Set.fromList [guard])
+    let res3 = filter (/=origin) $ nub $ findLoops area guard (Set.fromList [guard])
     print res3
+    print $ length res3
 
     return ()
 
 type Vector = (Coordinate, Direction)
 
-findLoops :: Area -> Vector -> Set.Set Vector -> Set.Set Vector
+findLoops :: Area -> Vector -> Set.Set Vector -> [Coordinate]
 findLoops area guard@(xy,dir) seen
-    | not (visible area xyNext)     = seen
-    | nextCh == '#'                 = findLoops area (xy, turnRight dir) (Set.insert (xy, turnRight dir) seen)
-    | looping                       = Set.insert (xyNext, dir) (Set.insert (xyNext, turnRight dir) seen)
-    | otherwise                     = findLoops area (xyNext, dir) (Set.insert (xyNext, dir) seen)
+    | not (visible area xyNext)     = []
+    | sqCh area xyNext == '#'       = findLoops area (xy, turnRight dir) (Set.insert (xy, turnRight dir) seen)
+    | looping                       = xyNext : (findLoops area (xyNext, dir) (Set.fromList [(xyNext, dir)]))
+    | otherwise                     = findLoops area (xyNext, dir) (Set.fromList [(xyNext, dir)])
     where
         xyNext = moveOne xy dir
-        nextCh = sqCh area xyNext
-        (looping, _) = isLooping (addObstacle area xyNext) (xyNext, turnRight dir) (Set.insert (xyNext, turnRight dir) seen)
+        looping = isLooping (addObstacle area xyNext) (xy, turnRight dir) (Set.insert (xy, turnRight dir) seen)
     
-isLooping :: Area -> Vector -> Set.Set Vector -> (Bool, Set.Set Vector)
+isLooping :: Area -> Vector -> Set.Set Vector -> Bool
 isLooping area guard@(xy,dir) seen
-    | Set.member (xyNext,dir) seen       = (True, seen)
-    | not (visible area xyNext)          = (False, Set.insert (xyNext, dir) seen)
-    | nextCh == '#'                      = isLooping area (xy, turnRight dir) (Set.insert (xy, turnRight dir) seen)
+    | not (visible area xyNext)          = False
+    | Set.member (xyNext,dir) seen       = True
+    | sqCh area xyNext == '#'            = isLooping area (xy, turnRight dir) (Set.insert (xy, turnRight dir) seen)
     | otherwise                          = isLooping area (xyNext, dir) (Set.insert (xyNext, dir) seen)
     where
         xyNext = moveOne xy dir
-        nextCh = sqCh area xyNext
 
 addObstacle :: Area -> Coordinate -> Area
 addObstacle area (x, y) = take y area ++ [take x (area !! y) ++ ['#'] ++ drop (x + 1) (area !! y)] ++ drop (y + 1) area
