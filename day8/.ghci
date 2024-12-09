@@ -1,0 +1,3 @@
+:set -Wno-unused-imports
+:set -Wno-incomplete-patterns
+:set -Wno-unused-local-binds

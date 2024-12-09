@@ -1,0 +1,15 @@
+{
+    "folders": [
+        {
+            "path": "day8"
+        }
+    ],
+    "settings": {},
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": []
+    },
+    "extensions": {
+        "recommendations": []
+    }
+}

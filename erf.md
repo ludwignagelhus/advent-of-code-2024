@@ -11,6 +11,13 @@ ghci> foobar
 ~/.local/bin/ghcid --c "ghci Main.hs" --test "main"
 ```
 
+Can also do this in a cabal project:
+
+```
+ # ~/.local/bin/ghcid -c "cabal repl" --test "<some_fn>"
+ > ~/.local/bin/ghcid -c "cabal repl" --test "main"
+```
+
 # haskell tools:
 
 - ghc
