@@ -1,29 +1,15 @@
 module Main where
 
-import Test.QuickCheck
 import Test.Hspec
-
-import Data.List (permutations)
+import Test.QuickCheck
+import Data.List ( permutations )
+import Data.Set (fromList)
 
 main :: IO ()
 main = do
-    let erf = splitWhen (== ' ')
-    putStrLn "heyo"
-    erf <- hspec spec
     putStrLn "main"
-
-tst :: IO ()
-tst = do
-    content <- readFile "input.txt"
-    putStrLn "tst"
-
-fnexp :: IO ()
-fnexp = do
-    putStrLn "exp"
-    content <- readFile "input-test.txt"
-    putStrLn content
-    print $ findAntinodes ((4, 3), 'A') ((5, 5), 'A')
-    print $ findAntinodes ((5, 5), 'A') ((4, 3), 'A')
+    erf <- hspec spec
+    return ()
 
 pt1 :: IO ()
 pt1 = do
@@ -66,19 +52,26 @@ findAntinodes (p1, hz1) (p2, hz2)
 --     let
 --     in True
 
--- copy from one of the prev days.
+-- don't need this nonsense when have unit testing?
 
--- myFunction :: Int -> Int
--- myFunction x = x + 1
+fnexp :: IO ()
+fnexp = do
+    putStrLn "exp"
+    content <- readFile "input-test.txt"
+    putStrLn content
+    print $ findAntinodes ((4, 3), 'A') ((5, 5), 'A')
+    print $ findAntinodes ((5, 5), 'A') ((4, 3), 'A')
+
 
 spec :: Spec
 spec = do
   describe "utils for day 8" $ do
     it "parses test input correctly" $ do
+        readContent <- readFile "../input-test.txt"
+        putStrLn readContent
         let antennas = [((4, 3), 'A'), ((5, 5), 'A')]
-            expectedAntennas = Set.fromList [((6, 7), 'A'), ((3, 1), 'A')]
+            expectedAntennas = fromList [((6, 7), 'A'), ((3, 1), 'A')]
         42 `shouldBe` 42
-      -- 
-
+      
     it "finds antinodes for antenna pair" $ do
       findAntinodes ((4, 3), 'A') ((5, 5), 'A') `shouldSatisfy` (`elem` permutations [(6, 7), (3, 1)])
